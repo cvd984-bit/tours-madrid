@@ -246,6 +246,11 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
 .entrada .sub{text-align:center;margin:10px 0 22px}
 .entrada form{background:var(--papel);border-radius:28px;padding:20px 18px 18px}
 .peque{margin:12px 0 0;text-align:center;font-size:12px;color:var(--gris)}
+.chuleta{position:relative;display:flex;gap:12px;align-items:center;margin:22px 10px 0;padding:14px 16px 13px;background:var(--blanco);border:2px dashed var(--linea);border-radius:18px;transform:rotate(-1.2deg);font-size:14px;line-height:1.35;color:var(--gris2)}
+.chuleta::before{content:"";position:absolute;top:-9px;left:50%;width:64px;height:16px;margin-left:-32px;background:rgba(229,72,59,.28);transform:rotate(3deg);border-radius:2px}
+.chuleta b{color:var(--tinta);font-weight:800}
+.chuleta .llave{flex:none;width:38px;height:38px;border-radius:19px;background:var(--rojo);display:grid;place-items:center;transform:rotate(1.2deg)}
+.chuleta .llave svg{width:22px;height:22px;margin:0}
 .toast{position:absolute;left:50%;bottom:calc(96px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,20px);padding:10px 16px;border-radius:16px;background:var(--tinta);color:var(--papel);font-size:14px;font-weight:650;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s var(--muelle);z-index:12;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (max-height:760px){
@@ -448,6 +453,7 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
       <button class="bot lleno" type="submit">Entrar</button>
       <p class="peque">En este prototipo tu nombre y tus votos se guardan solo en este navegador.</p>
     </form>
+    <div class="chuleta"><span class="llave"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#FBF8F2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8 20 3M16.5 6.5l2.5 2.5M14 9l2 2"/></svg></span><p><b>¿Primera vez?</b> Elige un nombre y un PIN, y apúntatelo. Para volver a entrar, en este móvil o en otro, pon el mismo nombre y el mismo PIN.</p></div>
   </div>
 </div>
 
