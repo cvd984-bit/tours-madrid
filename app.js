@@ -74,6 +74,15 @@
     });
   }
   function token() { return S.me && S.me.token; }
+  // Escrituras en fila: van al servidor en el orden en que se hicieron (un sí/no rápido no se cruza) y, mientras
+  // haya alguna en vuelo, una actualización no pisa lo que se ve con datos de antes del voto.
+  var cola = Promise.resolve(), pendientes = 0, version = 0;
+  function escribir(fn, args) {
+    pendientes++; version++;
+    var p = cola.then(function () { return rpc(fn, args); });
+    cola = p.catch(function () {}).then(function () { pendientes--; if (!pendientes) refrescar(); });
+    return p;
+  }
   function fallo(e) {
     var m = String((e && e.message) || e);
     if (/sesion_no_valida/.test(m)) { S = nuevo(); guardar(); pintarTodo(); mostrarEntrada(); aviso('Vuelve a entrar con tu nombre y tu PIN.'); return; }
@@ -83,7 +92,9 @@
   }
   function refrescar() {
     if (!ONLINE) return Promise.resolve();
+    var v = version;
     return rpc('estado').then(function (j) {
+      if (pendientes || v !== version) return;  // llegó con datos de antes de un voto: al acabar la escritura se vuelve a pedir
       var g = { miembros: j.miembros || [], tema: {}, si: {}, no: {}, fechas: j.fechas || [] };
       (j.votos_tema || []).forEach(function (v) { (g.tema[v.tema] = g.tema[v.tema] || []).push(v.nick); });
       (j.votos_tour || []).forEach(function (v) { var m = v.valor > 0 ? g.si : g.no; (m[v.tour] = m[v.tour] || []).push(v.nick); });
@@ -285,7 +296,7 @@
       v.setAttribute('aria-pressed', on);
       v.querySelector('span').textContent = on ? 'Te apetece' : 'Me apetece';
       tarjeta.querySelector('.tema-n b').textContent = quienesTema(id).length;
-      if (ONLINE) rpc('votar_tema', { p_token: token(), p_tema: id, p_on: on }).catch(fallo);
+      if (ONLINE) escribir('votar_tema', { p_token: token(), p_tema: id, p_on: on }).catch(fallo);
       return;
     }
     var t = e.target.closest('[data-ir]');
@@ -442,7 +453,7 @@
     ocupado = true;
     if (dir > 0) { poner(S.tours, t.id); quitar(S.paso, t.id); } else { poner(S.paso, t.id); quitar(S.tours, t.id); }
     guardar();
-    if (ONLINE) rpc('votar_tour', { p_token: token(), p_tour: t.id, p_valor: dir }).catch(fallo);
+    if (ONLINE) escribir('votar_tour', { p_token: token(), p_tour: t.id, p_valor: dir }).catch(fallo);
     var si = card.querySelector('.estampa.si'), no = card.querySelector('.estampa.no'), sale = dir > 0 ? si : no, otra = dir > 0 ? no : si;
     otra.classList.remove('puesta', 'cae');
     sale.classList.remove('puesta', 'cae'); void sale.offsetWidth; sale.classList.add('cae');
@@ -484,7 +495,7 @@
     var id = b.getAttribute('data-fecha'), on = S.vienen.indexOf(id) < 0;
     if (on) poner(S.vienen, id); else quitar(S.vienen, id);
     guardar(); pintarFechas();
-    if (ONLINE) rpc('marcar_fecha', { p_token: token(), p_fecha: id, p_on: on }).then(refrescar).catch(fallo);
+    if (ONLINE) escribir('marcar_fecha', { p_token: token(), p_fecha: id, p_on: on }).then(refrescar).catch(fallo);
   });
   $('#proponer').addEventListener('click', function () {
     var franja = 'Tarde';
@@ -508,7 +519,7 @@
       if (dia < hoyISO()) { err.textContent = 'Ese día ya ha pasado. Elige uno a partir de hoy.'; return; }
       if (todasFechas().some(function (f) { return f.dia === dia && f.franja === franja; })) { err.textContent = 'Esa fecha y franja ya están propuestas: márcala en la lista.'; return; }
       if (ONLINE) {
-        rpc('proponer_fecha', { p_token: token(), p_dia: dia, p_franja: franja, p_nota: nota }).then(function (nid) {
+        escribir('proponer_fecha', { p_token: token(), p_dia: dia, p_franja: franja, p_nota: nota }).then(function (nid) {
           recien = nid; cerrarHoja(); refrescar(); aviso('Fecha propuesta: ' + fechaPartes(dia).largo);
         }).catch(function (e2) { var m = String(e2 && e2.message); var k = Object.keys(MSG).filter(function (x) { return m.indexOf(x) >= 0; })[0]; err.textContent = k ? MSG[k] : 'No se ha podido guardar. Revisa la conexión.'; });
         return;
