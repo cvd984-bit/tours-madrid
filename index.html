@@ -234,6 +234,7 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
 .campo label{font-size:13px;font-weight:700;color:var(--gris2)}
 .campo input{height:50px;box-sizing:border-box;padding:0 16px;border:2px solid var(--linea);border-radius:16px;background:var(--blanco);font-size:17px}
 .campo input:focus{border-color:var(--tinta);outline:none}
+#pin{-webkit-text-security:disc;text-security:disc;letter-spacing:.3em}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .seg button{height:44px;border:2px solid var(--linea);border-radius:14px;background:var(--blanco);font-size:15px;font-weight:700;transition:background .2s,color .2s,border-color .2s}
 .seg button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
@@ -441,8 +442,8 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
     </svg>
     <h1 class="titulo">Tours por Madrid</h1>
     <form id="f-entrada" novalidate>
-      <div class="campo"><label for="nick">¿Y tú quién eres?</label><input id="nick" autocomplete="nickname" maxlength="20" placeholder="Tu nombre"></div>
-      <div class="campo"><label for="pin">PIN de 4 cifras</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••"></div>
+      <div class="campo"><label for="nick">¿Y tú quién eres?</label><input id="nick" autocomplete="nickname" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" maxlength="20" placeholder="Tu nombre"></div>
+      <div class="campo"><label for="pin">PIN de 4 cifras</label><input id="pin" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="4" placeholder="••••"></div>
       <p class="error" id="error-entrada" role="alert"></p>
       <button class="bot lleno" type="submit">Entrar</button>
       <p class="peque">En este prototipo tu nombre y tus votos se guardan solo en este navegador.</p>

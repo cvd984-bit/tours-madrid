@@ -141,10 +141,19 @@
     $('#perfil-av').textContent = S.me ? ini(S.me.nick) : '?';
     $('#perfil-nick').textContent = S.me ? S.me.nick : 'Entrar';
   }
+  // PIN: teclado numérico directo (type=text + inputmode); si el navegador no sabe tapar el texto, vuelve a password
+  if (!(window.CSS && (CSS.supports('-webkit-text-security', 'disc') || CSS.supports('text-security', 'disc')))) $('#pin').type = 'password';
+  $('#pin').addEventListener('input', function () { var v = this.value.replace(/\D/g, '').slice(0, 4); if (v !== this.value) this.value = v; });
+  function mayus(t) { return t.charAt(0).toLocaleUpperCase('es') + t.slice(1); }
+  $('#nick').addEventListener('input', function () {
+    var v = this.value, m = mayus(v);
+    if (m !== v) { var a = this.selectionStart, b = this.selectionEnd; this.value = m; try { this.setSelectionRange(a, b); } catch (e) {} }
+  });
+  $('#nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('#pin').focus(); } });
   function mostrarEntrada() { $('#entrada').hidden = false; setTimeout(function () { try { $('#nick').focus(); } catch (e) {} }, 50); }
   $('#f-entrada').addEventListener('submit', function (e) {
     e.preventDefault();
-    var nick = $('#nick').value.trim(), pin = $('#pin').value.trim(), err = $('#error-entrada');
+    var nick = mayus($('#nick').value.trim()), pin = $('#pin').value.trim(), err = $('#error-entrada');
     if (nick.length < 2) { err.textContent = 'Tu nombre tiene que tener al menos 2 letras.'; return; }
     if (!/^\d{4}$/.test(pin)) { err.textContent = 'El PIN son 4 cifras, solo números.'; return; }
     if (ONLINE) {
