@@ -34,6 +34,7 @@
   function poner(a, id) { if (a.indexOf(id) < 0) a.push(id); }
   var S = cargar();
   if (!T.some(function (c) { return c.id === S.tema; })) S.tema = T[0].id;
+  var CARTA = 'M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM9 2h8M10 12h4M12 10v4';
   var TOUR = {};
   T.forEach(function (c) { c.tours.forEach(function (t) { TOUR[t.id] = { t: t, cat: c }; }); });
 
@@ -51,7 +52,8 @@
   function esYo(n) { return !!S.me && String(n).toLowerCase() === S.me.nick.toLowerCase(); }
   function otros(a) { return (a || []).filter(function (n) { return !esYo(n); }); }
   function quienesTour(id) { var a = otros(G.si[id]); if (S.tours.indexOf(id) >= 0) a.unshift(yo()); return a; }
-  function quienesTema(id) { var a = otros(G.tema[id]); if (S.temas.indexOf(id) >= 0) a.unshift(yo()); return a; }
+  // Votos de una temática: los «me apetece» de todos sus tours
+  function votosTema(c) { return c.tours.reduce(function (n, t) { return n + quienesTour(t.id).length; }, 0); }
   function miembros() { return [yo()].concat(otros(G.miembros)); }
   function todasFechas() {
     return G.fechas.concat(S.fechas).map(function (f) {
@@ -192,7 +194,7 @@
     if (!S.me) { mostrarEntrada(); return; }
     abrirHoja('<span class="asa"></span>' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span class="av yo" style="width:48px;height:48px;border-radius:24px;font-size:20px">' + esc(ini(S.me.nick)) + '</span>' +
-      '<div><div class="grande">' + esc(S.me.nick) + '</div><div class="por">Te apetecen ' + S.tours.length + ' tours y ' + S.temas.length + ' temáticas</div></div></div>' +
+      '<div><div class="grande">' + esc(S.me.nick) + '</div><div class="por">Te apetecen ' + S.tours.length + (S.tours.length === 1 ? ' tour' : ' tours') + '</div></div></div>' +
       '<p class="sub" style="margin:0 0 16px">Con tu nombre y tu PIN puedes entrar desde otro móvil y seguir donde lo dejaste.</p>' +
       '<div class="fila-bot"><button class="bot claro" data-cerrar>Cerrar</button><button class="bot" id="salir">Cambiar de usuario</button></div>');
     $('#salir').addEventListener('click', function () {
@@ -250,11 +252,10 @@
   function rel(i, a) { var n = T.length, k = ((i - a) % n + n) % n; return k > n / 2 ? k - n : k; }
   function pintarCarrusel() {
     $('#pista').innerHTML = T.map(function (c, i) {
-      var on = S.temas.indexOf(c.id) >= 0;
-      return '<div class="tema' + (on ? ' votada' : '') + '" data-i="' + i + '">' +
+      return '<div class="tema" data-i="' + i + '">' +
         '<div class="tema-cab"><span class="tema-ic">' + svg(c.d) + '</span><span class="tema-nom">' + esc(c.nombre) + '</span></div>' +
-        '<div class="tema-pie"><span class="tema-n">' + c.tours.length + (c.tours.length === 1 ? ' tour' : ' tours') + ' · <b>' + quienesTema(c.id).length + '</b> votos</span>' +
-        '<button class="megusta' + (on ? ' on' : '') + '" data-tema="' + c.id + '" aria-pressed="' + on + '" aria-label="Me apetece la temática ' + esc(c.nombre) + '">' + svg(CORAZON, 'icf', 16) + '<span>' + (on ? 'Te apetece' : 'Me apetece') + '</span></button></div>' +
+        '<div class="tema-pie"><span class="cifra"><b>' + c.tours.length + '</b>' + (c.tours.length === 1 ? 'tour' : 'tours') + '</span>' +
+        '<span class="cifra votos">' + svg(CORAZON, 'icf', 15) + '<b data-votos="' + c.id + '">' + votosTema(c) + '</b>' + (votosTema(c) === 1 ? 'voto' : 'votos') + '</span></div>' +
         '<button class="tema-tapa" data-ir="' + i + '" aria-label="Ver ' + esc(c.nombre) + '"></button></div>';
     }).join('');
     $('#puntos').innerHTML = T.map(function (c, i) {
@@ -285,20 +286,6 @@
   var arrastroTema = false;
   $('#pista').addEventListener('click', function (e) {
     if (arrastroTema) return;
-    var v = e.target.closest('[data-tema]');
-    if (v) {
-      // Se cambia en su sitio (sin repintar) para que se vea la animación del color
-      var id = v.getAttribute('data-tema'), on = S.temas.indexOf(id) < 0, tarjeta = v.closest('.tema');
-      if (on) poner(S.temas, id); else quitar(S.temas, id);
-      guardar();
-      tarjeta.classList.toggle('votada', on);
-      v.classList.toggle('on', on);
-      v.setAttribute('aria-pressed', on);
-      v.querySelector('span').textContent = on ? 'Te apetece' : 'Me apetece';
-      tarjeta.querySelector('.tema-n b').textContent = quienesTema(id).length;
-      if (ONLINE) escribir('votar_tema', { p_token: token(), p_tema: id, p_on: on }).catch(fallo);
-      return;
-    }
     var t = e.target.closest('[data-ir]');
     if (t) irTema(+t.getAttribute('data-ir'));
   });
@@ -355,6 +342,11 @@
       return '<span class="dato">' + (ic ? svg(ic, 'ic', 13) : '') + esc(m) + '</span>';
     }).join('');
   }
+  // Las siguientes tarjetas asoman por arriba, boca arriba, con su número y su nombre (como fichas en un fichero)
+  function detrasHTML(t, d, n, total) {
+    return '<div class="carta detras" data-d="' + d + '" style="z-index:' + (4 - d) + '" aria-hidden="true"><span class="ceja-d">' +
+      '<b>' + n + '</b>' + esc(t.t) + '</span></div>';
+  }
   function cartaHTML(t, d, n, total) {
     var mio = S.tours.indexOf(t.id) >= 0, paso = S.paso.indexOf(t.id) >= 0, q = quienesTour(t.id);
     var tf = d === 0 ? 'none' : d === 1 ? 'translateY(14px) scale(.95)' : 'translateY(28px) scale(.9)';
@@ -363,7 +355,7 @@
       estampa('si', mio) + estampa('no', paso) + '</div>' +
       '<div class="votar"><button class="v-no" data-voto="-1" aria-pressed="' + paso + '" aria-label="Bufff, este no">' + svg(EQUIS, 'ic', 22) + '</button>' +
       '<button class="v-si" data-voto="1" aria-pressed="' + mio + '" aria-label="Me apetece">' + svg(CORAZON, 'icf', 26) + '</button></div></div>' +
-      '<div class="cuerpo"><div class="ceja-t">Tour ' + n + ' / ' + total + '</div>' +
+      '<div class="cuerpo"><div class="ceja-t">Tour ' + n + ' de ' + total + '</div>' +
       '<h2>' + esc(t.t) + '</h2>' +
       '<div class="datos"><span class="dato dur">' + svg(RELOJ, 'ic', 13) + esc(t.dur) + '</span><span class="dato">' + esc(t.valor) + '</span><span class="dato precio' + (t.precio === 'Propina libre' ? '' : ' pago') + '">' + esc(t.precio) + '</span></div>' +
       '<p class="breve">' + esc(t.breve || t.desc) + '</p>' +
@@ -389,7 +381,8 @@
       return;
     }
     var html = '';
-    for (var d = 2; d >= 0; d--) { var t = tours[i + d]; if (t) html += cartaHTML(t, d, i + d + 1, tours.length); }
+    for (var d = 2; d >= 1; d--) if (tours[i + d]) html += detrasHTML(tours[i + d], d, i + d + 1, tours.length);
+    html += cartaHTML(tours[i], 0, i + 1, tours.length);
     z.innerHTML = html;
     var top = z.querySelector('.carta[data-d="0"]');
     if (anim) top.classList.add(anim === 'vuelve' ? 'vuelve' : 'nueva');
@@ -411,7 +404,7 @@
   }
   function arrastre(card) {
     var x0 = 0, dx = 0, abajo = false, movido = false, id = null;
-    var segunda = card.parentNode.querySelector('.carta[data-d="1"]');
+    var segunda = null;  // las de detrás solo asoman: no se mueven al arrastrar
     card.addEventListener('pointerdown', function (e) {
       if (ocupado) return;
       abajo = true; movido = false; x0 = e.clientX; dx = 0; id = e.pointerId;
@@ -454,6 +447,7 @@
     if (dir > 0) { poner(S.tours, t.id); quitar(S.paso, t.id); } else { poner(S.paso, t.id); quitar(S.tours, t.id); }
     guardar();
     if (ONLINE) escribir('votar_tour', { p_token: token(), p_tour: t.id, p_valor: dir }).catch(fallo);
+    var bv = document.querySelector('[data-votos="' + c.id + '"]'); if (bv) bv.textContent = votosTema(c);
     var si = card.querySelector('.estampa.si'), no = card.querySelector('.estampa.no'), sale = dir > 0 ? si : no, otra = dir > 0 ? no : si;
     otra.classList.remove('puesta', 'cae');
     sale.classList.remove('puesta', 'cae'); void sale.offsetWidth; sale.classList.add('cae');
@@ -540,17 +534,6 @@
       '<div class="quien" style="margin-top:10px">' + avs(m.vienen, 6) + '<span>' + m.vienen.length + ' de ' + total + ' pueden</span></div>'
       : '<p class="sub" style="margin:0">Aún nadie ha marcado fechas.</p>') + '</section>';
 
-    // Ranking de temáticas: podio con las tres primeras y el resto en lista
-    var temas = T.map(function (c, k) { return { c: c, n: quienesTema(c.id).length, k: k }; })
-      .sort(function (a, b) { return b.n - a.n || a.k - b.k; });
-    var esc3 = [temas[1], temas[0], temas[2]], clase = ['p2', 'p1', 'p3'], puesto = ['2.º', '1.º', '3.º'];
-    h += '<section class="bloque"><h3>Ranking de temáticas</h3><div class="podio">' + esc3.map(function (x, k) {
-      return '<div class="escalon ' + clase[k] + '"><span class="tema-ic">' + svg(x.c.d) + '</span><span class="nom">' + esc(x.c.nombre) + '</span>' +
-        '<div class="caja"><span class="puesto">' + puesto[k] + '</span><span class="vts">' + x.n + (x.n === 1 ? ' voto' : ' votos') + '</span></div></div>';
-    }).join('') + '</div><div class="resto">' + temas.slice(3).map(function (x, k) {
-      return '<div class="resto-f"><span class="n">' + (k + 4) + '.º</span><span class="nm">' + esc(x.c.nombre) + '</span><span class="num-v">' + x.n + '</span></div>';
-    }).join('') + '</div></section>';
-
     // Ranking de tours: los 5 más votados, con su enlace a la ficha
     var tours = Object.keys(TOUR).map(function (id) { return { id: id, n: quienesTour(id).length }; })
       .filter(function (x) { return x.n > 0; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
@@ -558,7 +541,8 @@
       var o = TOUR[x.id], q = quienesTour(x.id);
       return '<details class="rk-t"><summary><img src="img/' + x.id + '.jpg" alt="" style="object-position:50% ' + (o.t.foco || 50) + '%">' +
         '<span class="txt"><b>' + (k + 1) + '. ' + esc(o.t.t) + '</b><span>' + esc(o.cat.nombre) + ' · ' + esc(o.t.dur) + '</span></span>' +
-        '<span class="cuenta">' + x.n + svg(CORAZON, 'icf', 14) + '</span></summary>' +
+        '<span class="cuenta">' + x.n + svg(CORAZON, 'icf', 14) + '</span>' +
+        '<button class="a-carta" data-a-carta="' + x.id + '" aria-label="Ir a la tarjeta de ' + esc(o.t.t) + '">' + svg(CARTA, 'ic', 18) + '</button></summary>' +
         '<div class="rk-mas"><p>' + esc(o.t.breve) + '</p>' +
         '<details class="quien-rk"><summary>¿Quién?' + svg('M6 9l6 6 6-6', 'ic', 16) + '</summary><div class="grupo">' + q.map(function (n) {
           return '<span class="miembro"><span class="av' + (esYo(n) || n === 'Tú' ? ' yo' : '') + '">' + esc(ini(n)) + '</span>' + esc(n) + '</span>';
@@ -574,6 +558,16 @@
     }).join('') + '</section>';
     $('#plan').innerHTML = h;
   }
+  // Desde el ranking, el botón de la tarjeta lleva a ese tour en su temática
+  $('#plan').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-a-carta]');
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    var o = TOUR[b.getAttribute('data-a-carta')];
+    S.tema = o.cat.id; S.pos[o.cat.id] = o.cat.tours.indexOf(o.t); guardar();
+    irA('tours');
+    var top = $('#baraja .carta[data-d="0"]'); if (top) top.classList.add('nueva');
+  });
 
   // ---------- arranque ----------
   function pintarTodo() { pintarPerfil(); pintarCarrusel(); pintarBaraja(false); if (vista === 'fechas') pintarFechas(); if (vista === 'plan') pintarPlan(); }

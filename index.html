@@ -82,26 +82,30 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .tema-nom{font-size:19px;font-weight:780;font-stretch:88%;line-height:1.1}
 .tema-pie{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tema-n{font-size:13px;color:var(--gris);white-space:nowrap}
-.megusta{flex:none;display:flex;align-items:center;gap:5px;height:36px;padding:0 12px;border:2px solid var(--rojo);border-radius:18px;background:transparent;color:var(--rojo);font-size:13px;font-weight:750;transition:border-radius .5s cubic-bezier(.3,1.6,.4,1),transform .5s cubic-bezier(.3,1.6,.4,1),background .25s,color .25s}
-.megusta.on{border-radius:12px;transform:rotate(-3deg);background:var(--rojo);color:var(--blanco)}
-.megusta.on svg{animation:late .5s cubic-bezier(.3,1.6,.5,1)}
-@keyframes late{0%{transform:scale(1)}30%{transform:scale(1.35)}60%{transform:scale(.9)}100%{transform:scale(1)}}
+.tema-pie{justify-content:flex-start;gap:8px}
+.cifra{display:inline-flex;align-items:baseline;gap:5px;height:34px;padding:0 12px;border-radius:12px;background:var(--cielo);font-size:13px;font-weight:650;color:var(--gris2);white-space:nowrap}
+.cifra b{font-size:22px;line-height:34px;font-weight:800;font-stretch:80%;color:var(--tinta)}
+.cifra.votos{background:#FBE3DF;color:#9E2A20}
+.cifra.votos b{color:var(--rojo)}
+.cifra svg{align-self:center;color:var(--rojo)}
 .tema{overflow:hidden;isolation:isolate}
-.tema::before{content:"";position:absolute;right:52px;bottom:28px;width:24px;height:24px;border-radius:50%;background:var(--rojo);transform:scale(0);transition:transform .6s cubic-bezier(.3,.9,.3,1);z-index:-1}
-.tema.votada::before{transform:scale(26)}
 .tema-nom,.tema-n{transition:color .35s .1s}
 .tema-ic{transition:background .35s .1s,color .35s .1s}
-.tema.votada .tema-nom,.tema.votada .tema-n{color:var(--blanco)}
-.tema.votada .tema-ic{background:var(--papel);color:var(--rojo)}
-.tema.votada .megusta{background:var(--papel);color:var(--rojo);border-color:var(--papel)}
 .tema-tapa{position:absolute;inset:0;border:0;border-radius:24px;background:transparent}
 .tema.activa .tema-tapa{display:none}
 .flecha{position:absolute;top:32px;width:40px;height:40px;border-radius:20px;border:0;background:var(--tinta);color:var(--papel);display:grid;place-items:center;box-shadow:0 6px 14px -6px rgba(14,27,44,.6);transition:opacity .25s}
 .flecha.izq{left:6px}.flecha.der{right:6px}
 .flecha[disabled]{opacity:0;pointer-events:none}
 
-.baraja{position:relative;flex:1 0 auto;display:flex;flex-direction:column;margin:10px 20px calc(92px + env(safe-area-inset-bottom, 0px))}
+.baraja{position:relative;flex:1 0 auto;display:flex;flex-direction:column;margin:50px 20px calc(92px + env(safe-area-inset-bottom, 0px))}
 .carta[data-d="0"]{position:relative;inset:auto;flex:1 0 auto;max-height:660px}
+/* Detrás asoman las dos siguientes, boca arriba: una franja con su número y su nombre, cada una más atrás y más oscura */
+.carta.detras{transform-origin:50% 0;cursor:default;box-shadow:0 1px 0 rgba(14,27,44,.08),0 4px 10px -6px rgba(14,27,44,.35)}
+.carta.detras[data-d="1"]{transform:translateY(-22px) scale(.95);background:#EFE9DD}
+.carta.detras[data-d="2"]{transform:translateY(-42px) scale(.9);background:#E2DACB}
+.ceja-d{display:flex;align-items:center;gap:7px;height:22px;padding:0 20px;font-size:12px;font-weight:700;color:var(--gris2);white-space:nowrap;overflow:hidden}
+.ceja-d b{flex:none;display:grid;place-items:center;min-width:16px;height:16px;border-radius:8px;background:var(--tinta);color:var(--papel);font-size:10px}
+.carta.detras[data-d="2"] .ceja-d{font-size:11.5px}
 .carta{position:absolute;inset:0;box-sizing:border-box;border-radius:30px;background:var(--papel);box-shadow:0 1px 0 rgba(14,27,44,.06),0 12px 28px -12px rgba(14,27,44,.35);display:flex;flex-direction:column;overflow:hidden;touch-action:pan-y;user-select:none;cursor:grab;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 .carta.arrastrando{transition:none;cursor:grabbing}
 .carta.nueva{animation:sube .4s cubic-bezier(.2,.9,.3,1.2)}
@@ -159,21 +163,6 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .carta.sale-izq{transition:transform .3s cubic-bezier(.4,0,.6,1)!important;transform:translateX(-120%) rotate(-12deg)!important}
 .carta.sale-der{transition:transform .3s cubic-bezier(.4,0,.6,1)!important;transform:translateX(120%) rotate(12deg)!important}
 /* ---- Podio de temáticas ---- */
-.podio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;margin-bottom:14px}
-.escalon{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
-.escalon .tema-ic{width:42px;height:42px}
-.escalon .nom{font-size:13px;font-weight:750;line-height:1.15;min-height:30px;display:flex;align-items:flex-end}
-.escalon .caja{width:100%;border-radius:14px 14px 6px 6px;background:var(--tinta);color:var(--papel);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;transform-origin:bottom;animation:sube-podio .7s var(--muelle) both}
-.escalon.p1 .caja{background:var(--rojo);height:104px;animation-delay:.25s}
-.escalon.p2 .caja{height:78px;animation-delay:.1s}
-.escalon.p3 .caja{height:58px;background:var(--gris2);animation-delay:.4s}
-.escalon .puesto{font-size:22px;font-weight:800;line-height:1}
-.escalon .vts{font-size:12px;font-weight:650;opacity:.85}
-@keyframes sube-podio{from{transform:scaleY(0)}to{transform:none}}
-.resto{display:flex;flex-direction:column;gap:8px}
-.resto-f{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:650}
-.resto-f .n{width:22px;color:var(--gris);font-variant-numeric:tabular-nums}
-.resto-f .nm{flex:1;min-width:0}
 .mini{display:inline-flex;align-items:center;gap:4px;margin-top:4px;height:28px;padding:0 10px;border-radius:14px;background:var(--cielo);color:var(--tinta);font-size:12px;font-weight:750;text-decoration:none;align-self:flex-start}
 
 /* ---- Fechas y Plan ---- */
@@ -263,7 +252,7 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
   .tema{height:96px;padding-top:10px;padding-bottom:10px}
   .flecha{top:28px}
   .vuelta{padding-top:6px}
-  .baraja{margin-top:8px}
+  .baraja{margin-top:46px}
   .cuerpo{gap:6px;padding:10px 16px 12px}
   .carta h2{font-size:21px}
 }
@@ -298,6 +287,8 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
 .rk-t .txt b{line-height:1.2}
 .rk-t .txt span{font-size:12px;font-weight:600;color:var(--gris)}
 .rk-t .cuenta{display:flex;align-items:center;gap:4px;font-size:17px;font-weight:800;color:var(--rojo)}
+.a-carta{flex:none;width:40px;height:40px;margin-left:2px;border:0;border-radius:20px;background:var(--tinta);color:var(--papel);display:grid;place-items:center}
+.a-carta:active{transform:scale(.9)}
 .rk-mas{padding:0 12px 12px}
 .rk-mas p{margin:0 0 8px!important;font-size:14px;line-height:1.45;color:#26344A!important}
 .quien-rk{border-top:1px solid var(--linea)!important}
@@ -361,7 +352,7 @@ details p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--gris2)}
   <main>
     <section class="vista" id="v-tours" aria-label="Tours">
       <div class="cab-tours">
-        <div class="cab-txt"><h1 class="titulo">¿Qué tour <br>hacemos?</h1><p class="lema">Vota temáticas, tours o las dos cosas.</p></div>
+        <div class="cab-txt"><h1 class="titulo">¿Qué tour <br>hacemos?</h1><p class="lema">Elige temática y vota sus tours.</p></div>
         <svg viewBox="0 0 360 150" role="img" aria-label="Puerta de Alcalá">
           <circle class="sol" cx="180" cy="70" r="62" fill="#E5483B"></circle>
           <path fill="#FBF8F2" fill-rule="evenodd" stroke="#0E1B2C" stroke-width="2.2" stroke-linejoin="round" d="M24 141V60H104V36H140L180 14L220 36H256V60H336V141ZM124 141V98a14 14 0 0 1 28 0V141ZM166 141V98a14 14 0 0 1 28 0V141ZM208 141V98a14 14 0 0 1 28 0V141ZM52 141V96H78V141ZM282 141V96H308V141Z"></path>
