@@ -278,7 +278,9 @@
   }
   function irTema(i) {
     var n = T.length;
-    S.tema = T[((i % n) + n) % n].id; guardar(); colocar(true); pintarBaraja(true);
+    var nueva = T[((i % n) + n) % n].id;
+    if (nueva !== S.tema) S.pos[nueva] = 0;  // al cambiar de temática se empieza siempre por su primer tour
+    S.tema = nueva; guardar(); colocar(true); pintarBaraja(true);
   }
   $('#ant').addEventListener('click', function () { irTema(ti() - 1); });
   $('#sig').addEventListener('click', function () { irTema(ti() + 1); });
