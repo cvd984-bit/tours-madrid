@@ -255,7 +255,7 @@
       return '<div class="tema" data-i="' + i + '">' +
         '<div class="tema-cab"><span class="tema-ic">' + svg(c.d) + '</span><span class="tema-nom">' + esc(c.nombre) + '</span></div>' +
         '<div class="tema-pie"><span class="cifra"><b>' + c.tours.length + '</b>' + (c.tours.length === 1 ? 'tour' : 'tours') + '</span>' +
-        '<span class="cifra votos">' + svg(CORAZON, 'icf', 15) + '<b data-votos="' + c.id + '">' + votosTema(c) + '</b>' + (votosTema(c) === 1 ? 'voto' : 'votos') + '</span></div>' +
+        '<span class="cifra votos" aria-label="Votos de sus tours">' + svg(CORAZON, 'icf', 15) + '<b data-votos="' + c.id + '">' + votosTema(c) + '</b></span></div>' +
         '<button class="tema-tapa" data-ir="' + i + '" aria-label="Ver ' + esc(c.nombre) + '"></button></div>';
     }).join('');
     $('#puntos').innerHTML = T.map(function (c, i) {
